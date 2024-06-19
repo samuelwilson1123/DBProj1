@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static java.lang.StringTemplate.STR;
 import static java.lang.System.arraycopy;
 import static java.lang.System.out;
 
@@ -81,8 +82,8 @@ public class Table
         case NO_MAP      -> null;
         case TREE_MAP    -> new TreeMap <> ();
         case HASH_MAP    -> new HashMap <> ();
-        case LINHASH_MAP -> new LinHashMap <> (KeyType.class, Comparable [].class);
-        case BPTREE_MAP  -> new BpTreeMap <> (KeyType.class, Comparable [].class);
+        //case LINHASH_MAP -> new LinHashMap <> (KeyType.class, Comparable [].class);
+        //case BPTREE_MAP  -> new BpTreeMap <> (KeyType.class, Comparable [].class);
         default          -> null;
         }; // switch
     } // makeMap
