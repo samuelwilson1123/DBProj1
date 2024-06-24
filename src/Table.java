@@ -348,16 +348,83 @@ public class Table
      */
     public Table join (String attributes1, String attributes2, Table table2)
     {
-        out.println (STR."RA> \{name}.join (\{attributes1}, \{attributes2}, \{table2.name})");
+        if (attributes1.equals(attributes2)) {
+            System.out.println(String.format("RA> %s.join(%s)", name, table2.name));
+        } else {
+            out.println(STR."RA> \{name}.join (\{attributes1}, \{attributes2}, \{table2.name})");
+        }
 
         var t_attrs = attributes1.split (" ");
         var u_attrs = attributes2.split (" ");
         var rows    = new ArrayList <Comparable []> ();
 
-        //  T O   B E   I M P L E M E N T E D 
+        var t_colPos = match(t_attrs);
+        var u_colPos = table2.match(u_attrs);
 
-        return new Table (name + count++, concat (attribute, table2.attribute),
-                                          concat (domain, table2.domain), key, rows);
+        for (var t_tuple : tuples) {
+            for (var u_tuple : table2.tuples) {
+                boolean match = true;
+                for (int k = 0; k < t_colPos.length; k++) {
+                    if (!t_tuple[t_colPos[k]].equals(u_tuple[u_colPos[k]])) {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match) {
+                    // removing the compared attribute and then adding the tuple
+                    var temp_tuple = table2.extract(u_tuple, u_attrs);
+                    ArrayList<Comparable> new_tup = new ArrayList<Comparable>();
+                    for (int i = 0; i < u_tuple.length; i++) {
+                        boolean match_2 = false;
+                        for (int j = 0; j < temp_tuple.length; j++) {
+                            if (u_tuple[i].equals(temp_tuple[j])) {
+                                match_2 = true;
+                            }
+                        }
+                        if (!match_2) {
+                            new_tup.add(u_tuple[i]);
+                        }
+                    }
+
+                    // turning the arraylist into an array then combining w prev tuple
+                    Comparable[] altered = new Comparable[new_tup.size()];
+                    new_tup.toArray(altered);
+                    rows.add(concat(t_tuple, altered));
+                }
+            }
+        }
+
+        // making an array consisting of all the attributes in table 2 minus
+        // any attributes being compared
+        ArrayList<String> tempAttr = new ArrayList<String>();
+        for (int i = 0; i < table2.attribute.length; i++) {
+            var match = false;
+            for (int j = 0; j < u_attrs.length; j++) {
+                if (table2.attribute[i].equals(u_attrs[j])) {
+                    match = true;
+                }
+            }
+            if (!match) {
+                tempAttr.add(table2.attribute[i]);
+            }
+        }
+        String[] attrArr = new String[tempAttr.size()];
+        tempAttr.toArray(attrArr);
+
+        var newAttribute = concat(attribute, attrArr);
+        var newDomain = concat(domain, table2.domain);
+
+        // Disambiguate attribute names
+        for (int i = 0; i < attribute.length; i++) {
+            for (int j = 0; j < attrArr.length; j++) {
+                if (attribute[i].equals(attrArr[j])) {
+                    newAttribute[attribute.length + j] += "2";
+                }
+            }
+        }
+
+        return new Table (name + count++, newAttribute,
+                                          newDomain, key, rows);
     } // join
 
     /************************************************************************************
@@ -377,7 +444,32 @@ public class Table
 
         var rows = new ArrayList <Comparable []> ();
 
-        //  T O   B E   I M P L E M E N T E D
+        String[] condParts = condition.split("\\s+");
+        if (condParts.length != 3) {
+            throw new IllegalArgumentException("Invalid join condition format. Expected: 'attr1 operator attr2'");
+        }
+
+        var leftAttr = condParts[0];
+        var operator = condParts[1];
+        var rightAttr = condParts[2];
+
+        var leftCol = col(leftAttr);
+        var rightCol = table2.col(rightAttr);
+
+        // do the join
+        for (Comparable[] t1 : tuples) {
+            for (Comparable[] t2 : table2.tuples) {
+                Comparable leftVal = t1[leftCol];
+                Comparable rightVal = t2[rightCol];
+
+                boolean match = compare(leftVal, operator, rightVal);
+
+                if (match) {
+                    Comparable[] joined_tuple = concat(t1, t2);
+                    rows.add(joined_tuple);
+                }
+            }
+        }
 
         return new Table (name + count++, concat (attribute, table2.attribute),
                                           concat (domain, table2.domain), key, rows);
@@ -410,18 +502,67 @@ public class Table
      * @param table2  the rhs table in the join operation
      * @return  a table with tuples satisfying the equality predicate
      */
-    public Table join (Table table2)
-    {
-        out.println (STR."RA> \{name}.join (\{table2.name})");
+    public Table join(Table table2) {
 
-        var rows = new ArrayList <Comparable []> ();
+        List <Comparable []> rows = new ArrayList <> ();
 
-        //  T O   B E   I M P L E M E N T E D 
+        // STEP ONE: find commonly named attributes
+        List<String> commonAttributes = new ArrayList<>();
+        for (String attr1 : attribute) {
+            for (String attr2 : table2.attribute) {
+                if (attr1.equals(attr2)) {
+                    commonAttributes.add(attr1);
+                    break;
+                }
+            }
+        }
 
-        // FIX - eliminate duplicate columns
-        return new Table (name + count++, concat (attribute, table2.attribute),
-                                          concat (domain, table2.domain), key, rows);
-    } // join
+        // STEP TWO: if there are no commonly named attributes find the cartesian product
+        if (commonAttributes.isEmpty()) {
+            System.out.println(String.format("RA> %s.join(%s)", name, table2.name));
+
+            // Perform a Cartesian product if there are no common attributes
+            for (Comparable[] t1 : tuples) {
+                for (Comparable[] t2 : table2.tuples) {
+                    rows.add(concat(t1, t2));
+                }
+            }
+
+            // Prepare new attribute and domain arrays
+            String[] newAttributes = concat(attribute, table2.attribute);
+            Class[] newDomains = concat(domain, table2.domain);
+
+            return new Table(name + count++, newAttributes, newDomains, key, rows);
+        }
+
+        // STEP THREE: equi join on all the commonly named attributes
+        // turning common attributes into a string that can be used in other join
+        String attrStr = "";
+        for (int i = 0; i < commonAttributes.size(); i++) {
+            attrStr += commonAttributes.get(i);
+            if (i != commonAttributes.size() - 1) {
+                attrStr += " ";
+            }
+        }
+
+        return join(attrStr, attrStr, table2);
+    }
+
+    /**
+     * Check if a list of tuples contains a specific tuple.
+     *
+     * @param tuples  list of tuples to check
+     * @param tuple   tuple to search for
+     * @return        true if the tuple is found, false otherwise
+     */
+    private boolean containsTuple(List<Comparable[]> tuples, Comparable[] tuple) {
+        for (Comparable[] t : tuples) {
+            if (Arrays.equals(t, tuple)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /************************************************************************************
      * Return the column position for the given attribute name or -1 if not found.
@@ -496,6 +637,33 @@ public class Table
         out.print ("---------------".repeat (attribute.length));
         out.println ("-|");
     } // print
+
+    /**
+     * Compare two Comparable objects using the specified operator.
+     *
+     * @param a         the first Comparable object
+     * @param operator  the comparison operator
+     * @param b         the second Comparable object
+     * @return true if the comparison is true, false otherwise
+     */
+    private boolean compare(Comparable a, String operator, Comparable b) {
+        switch (operator) {
+            case "=":
+                return a.equals(b);
+            case "!=":
+                return !a.equals(b);
+            case "<":
+                return a.compareTo(b) < 0;
+            case "<=":
+                return a.compareTo(b) <= 0;
+            case ">":
+                return a.compareTo(b) > 0;
+            case ">=":
+                return a.compareTo(b) >= 0;
+            default:
+                throw new IllegalArgumentException("Unknown operator: " + operator);
+        }
+    }
 
     /************************************************************************************
      * Print this table's index (Map).
