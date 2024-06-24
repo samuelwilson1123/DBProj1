@@ -324,23 +324,33 @@ public class Table
     public Table minus (Table table2)
     {
         out.println (STR."RA> \{name}.minus (\{table2.name})");
+
+        // Check if the two tables are compatible 
         if (! compatible (table2)) return null;
 
+        // Create a new list 
         List <Comparable []> rows = new ArrayList <> ();
 
+        // Iterate through each tuple in the current table
         for (var t1 : tuples) {
             boolean found = false;
+
+            // Iterate through each tuple in the second table
             for (var t2 : table2.tuples) {
+
+                // Check if the tuples from the tables are equal
                 if (Arrays.equals(t1,t2)) {
                     found = true;
                     break;
                 }
             }
 
+            // Add tuple to result table if it was not found in the second table
             if(!found) rows.add(t1);
-        }
+        } 
 
         return new Table (name + count++, attribute, domain, key, rows);
+
     } // minus
 
     /************************************************************************************
