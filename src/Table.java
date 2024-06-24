@@ -303,7 +303,9 @@ public class Table
 
         List <Comparable []> rows = new ArrayList <> ();
 
-        //  T O   B E   I M P L E M E N T E D 
+        //  T O   B E   I M P L E M E N T E D
+       rows.addAll(tuples);
+       rows.addAll(table2.tuples);
 
         return new Table (name + count++, attribute, domain, key, rows);
     } // union
