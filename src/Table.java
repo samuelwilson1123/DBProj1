@@ -328,7 +328,17 @@ public class Table
 
         List <Comparable []> rows = new ArrayList <> ();
 
-        //  T O   B E   I M P L E M E N T E D 
+        for (var t1 : tuples) {
+            boolean found = false;
+            for (var t2 : table2.tuples) {
+                if (Arrays.equals(t1,t2)) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if(!found) rows.add(t1);
+        }
 
         return new Table (name + count++, attribute, domain, key, rows);
     } // minus
