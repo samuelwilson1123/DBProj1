@@ -812,9 +812,21 @@ public class Table
      */
     private boolean typeCheck (Comparable [] t)
     { 
-        //  T O   B E   I M P L E M E N T E D 
+       // Check the size of the tuple
+        if (t.length != domain.length) {
+            out.println("ERROR : tuple is NOT the correct size.");
+            return false;
+        }
 
-        return true;      // change once implemented
+        // Check that each value in the tuple complies with the given domain
+        for (int i = 0; i < domain.length; i++) {
+            if (!domain[i].isInstance(t[i])) {
+                out.println("ERROR : tuple element is NOT the correct type.");
+                return false;
+            }
+        }
+
+        return true; 
     } // typeCheck
 
     /************************************************************************************
