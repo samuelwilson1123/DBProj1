@@ -228,6 +228,7 @@ public class Table
         for (var t : tuples) {
             if (satifies (t, colNo, token [1], token [2])) rows.add (t);
         } // for
+       //for each tuple that satifies the condition given gets added
 
         return new Table (name + count++, attribute, domain, key, rows);
     } // select
@@ -306,6 +307,7 @@ public class Table
         //  T O   B E   I M P L E M E N T E D
        rows.addAll(tuples);
        rows.addAll(table2.tuples);
+       //add the orginal tuples then add the second table's tuples
 
         return new Table (name + count++, attribute, domain, key, rows);
     } // union
