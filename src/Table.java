@@ -24,7 +24,7 @@ import static java.lang.System.out;
  * Missing are update and delete data manipulation operators.
  */
 public class Table
-       implements Serializable
+        implements Serializable
 {
     /** Relative path for storage directory
      */
@@ -71,7 +71,7 @@ public class Table
 
     /** The map type to be used for indices.  Change as needed.
      */
-    private static final MapType mType = MapType.NO_MAP;
+    private static final MapType mType = MapType.TREE_MAP;
 
     /************************************************************************************
      * Make a map (index) given the MapType.
@@ -79,12 +79,12 @@ public class Table
     private static Map <KeyType, Comparable []> makeMap ()
     {
         return switch (mType) {
-        case NO_MAP      -> null;
-        case TREE_MAP    -> new TreeMap <> ();
-        case HASH_MAP    -> new HashMap <> ();
-        //case LINHASH_MAP -> new LinHashMap <> (KeyType.class, Comparable [].class);
-        //case BPTREE_MAP  -> new BpTreeMap <> (KeyType.class, Comparable [].class);
-        default          -> null;
+            case NO_MAP      -> null;
+            case TREE_MAP    -> new TreeMap <> ();
+            case HASH_MAP    -> new HashMap <> ();
+            case LINHASH_MAP -> new LinHashMap <> (KeyType.class, Comparable [].class);
+            //case BPTREE_MAP  -> new BpTreeMap <> (KeyType.class, Comparable [].class);
+            default          -> null;
         }; // switch
     } // makeMap
 
@@ -115,7 +115,7 @@ public class Table
      * @param _attribute  the string containing attributes names
      * @param _domain     the string containing attribute domains (data types)
      * @param _key        the primary key
-     */  
+     */
     public Table (String _name, String [] _attribute, Class [] _domain, String [] _key)
     {
         name      = _name;
@@ -135,7 +135,7 @@ public class Table
      * @param _domain     the string containing attribute domains (data types)
      * @param _key        the primary key
      * @param _tuples     the list of tuples containing the data
-     */  
+     */
     public Table (String _name, String [] _attribute, Class [] _domain, String [] _key,
                   List <Comparable []> _tuples)
     {
@@ -202,8 +202,8 @@ public class Table
         out.println (STR."RA> \{name}.select (\{predicate})");
 
         return new Table (name + count++, attribute, domain, key,
-                   tuples.stream ().filter (t -> predicate.test (t))
-                                   .collect (Collectors.toList ()));
+                tuples.stream ().filter (t -> predicate.test (t))
+                        .collect (Collectors.toList ()));
     } // select
 
     /************************************************************************************
@@ -228,7 +228,7 @@ public class Table
         for (var t : tuples) {
             if (satifies (t, colNo, token [1], token [2])) rows.add (t);
         } // for
-       //for each tuple that satifies the condition given gets added
+        //for each tuple that satifies the condition given gets added
 
         return new Table (name + count++, attribute, domain, key, rows);
     } // select
@@ -248,26 +248,26 @@ public class Table
         var t_A = t[colNo];
         out.println (STR."satisfies: \{t_A} \{op} \{value}");
         var valt = switch (domain [colNo].getSimpleName ()) {      // type converted
-        case "Byte"      -> Byte.valueOf (value);
-        case "Character" -> value.charAt (0);
-        case "Double"    -> Double.valueOf (value);
-        case "Float"     -> Float.valueOf (value);
-        case "Integer"   -> Integer.valueOf (value);
-        case "Long"      -> Long.valueOf (value);
-        case "Short"     -> Short.valueOf (value);
-        case "String"    -> value;
-        default          -> value;
+            case "Byte"      -> Byte.valueOf (value);
+            case "Character" -> value.charAt (0);
+            case "Double"    -> Double.valueOf (value);
+            case "Float"     -> Float.valueOf (value);
+            case "Integer"   -> Integer.valueOf (value);
+            case "Long"      -> Long.valueOf (value);
+            case "Short"     -> Short.valueOf (value);
+            case "String"    -> value;
+            default          -> value;
         }; // switch
         var comp = t_A.compareTo (valt);
 
         return switch (op) {
-        case "==" -> comp == 0;
-        case "!=" -> comp != 0;
-        case "<"  -> comp <  0;
-        case "<=" -> comp <= 0;
-        case ">"  -> comp >  0;
-        case ">=" -> comp >= 0;
-        default   -> false;
+            case "==" -> comp == 0;
+            case "!=" -> comp != 0;
+            case "<"  -> comp <  0;
+            case "<=" -> comp <= 0;
+            case ">"  -> comp >  0;
+            case ">=" -> comp >= 0;
+            default   -> false;
         }; // switch
     } // satifies
 
@@ -284,7 +284,7 @@ public class Table
 
         List <Comparable []> rows = new ArrayList <> ();
 
-        //  T O   B E   I M P L E M E N T E D  - Project 2
+        rows.add(index.get(keyVal));
 
         return new Table (name + count++, attribute, domain, key, rows);
     } // select
@@ -305,9 +305,9 @@ public class Table
         List <Comparable []> rows = new ArrayList <> ();
 
         //  T O   B E   I M P L E M E N T E D
-       rows.addAll(tuples);
-       rows.addAll(table2.tuples);
-       //add the orginal tuples then add the second table's tuples
+        rows.addAll(tuples);
+        rows.addAll(table2.tuples);
+        //add the orginal tuples then add the second table's tuples
 
         return new Table (name + count++, attribute, domain, key, rows);
     } // union
@@ -347,7 +347,7 @@ public class Table
 
             // Add tuple to result table if it was not found in the second table
             if(!found) rows.add(t1);
-        } 
+        }
 
         return new Table (name + count++, attribute, domain, key, rows);
 
@@ -444,7 +444,7 @@ public class Table
         }
 
         return new Table (name + count++, newAttribute,
-                                          newDomain, key, rows);
+                newDomain, key, rows);
     } // join
 
     /************************************************************************************
@@ -492,7 +492,7 @@ public class Table
         }
 
         return new Table (name + count++, concat (attribute, table2.attribute),
-                                          concat (domain, table2.domain), key, rows);
+                concat (domain, table2.domain), key, rows);
     } // join
 
     /************************************************************************************
@@ -593,7 +593,7 @@ public class Table
     public int col (String attr)
     {
         for (var i = 0; i < attribute.length; i++) {
-           if (attr.equals (attribute [i])) return i;
+            if (attr.equals (attribute [i])) return i;
         } // for
 
         return -1;       // -1 => not found
@@ -811,8 +811,8 @@ public class Table
      *          with the given domains
      */
     private boolean typeCheck (Comparable [] t)
-    { 
-       // Check the size of the tuple
+    {
+        // Check the size of the tuple
         if (t.length != domain.length) {
             out.println("ERROR : tuple is NOT the correct size.");
             return false;
@@ -826,7 +826,7 @@ public class Table
             }
         }
 
-        return true; 
+        return true;
     } // typeCheck
 
     /************************************************************************************
