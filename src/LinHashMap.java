@@ -243,13 +243,57 @@ public class LinHashMap <K, V>
      * function 'h2'.  Increment 'isplit'.  If current split phase is complete,
      * reset 'isplit' to zero, and update the hash functions.
      */
-    private void split ()
-    {
-        out.println ("split: bucket chain " + isplit);
+    private void split() {
+        out.println("split: bucket chain " + isplit);
 
-        //  T O   B E   I M P L E M E N T E D
+        // Step 1: Create a new bucket at the end of hTable
+        hTable.add(new Bucket());
 
+        // Step 2: Redistribute keys from the bucket chain starting at isplit
+        var oldBucket = hTable.get(isplit);
+        var newBucket = new Bucket();
+        var previousBucket = oldBucket;
+        var currentBucket = oldBucket;
+        while (currentBucket != null) {
+            for (int i = 0; i < currentBucket.keys; i++) {
+                K key = currentBucket.key[i];
+                V value = currentBucket.value[i];
+                int newBucketIndex = h2(key);
+                if (newBucketIndex == isplit) {
+                    // Stay in the current bucket chain
+                    if (previousBucket != currentBucket) {
+                        previousBucket.next = currentBucket.next;
+                    }
+                    previousBucket = currentBucket;
+                } else {
+                    // Move to the new bucket chain
+                    newBucket.add(key, value);
+                    kCount--;
+                }
+            }
+            currentBucket = currentBucket.next;
+        }
+
+        // Reconnect the bucket chain
+        if (previousBucket != oldBucket) {
+            previousBucket.next = null;
+        }
+        hTable.set(isplit, oldBucket);
+
+        // Add the new bucket to the hash table
+        hTable.add(newBucket);
+
+        // Step 3: Increment isplit
+        isplit++;
+
+        // Step 4: Check if the current split phase is complete
+        if (isplit == mod1) {
+            isplit = 0;
+            mod1 = mod2;
+            mod2 = 2 * mod1;
+        }
     } // split
+
 
 //-----------------------------------------------------------------------------------
 // Print/show the Linear Hash Map

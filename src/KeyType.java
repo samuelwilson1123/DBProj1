@@ -75,6 +75,7 @@ public class KeyType
     {
         var sum = 0;
         for (var i = 0; i < key.length; i++) sum = 7 * sum + key [i].hashCode ();
+        if (sum < 0) sum *= -1; // MIGHT BE BAD BUT SUM KEPT BEING NEGATIVE
         return sum;
     } // hashCode
 
