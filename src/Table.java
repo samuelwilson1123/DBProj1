@@ -848,10 +848,20 @@ public class Table
         // Check that each value in the tuple complies with the given domain
         for (int i = 0; i < domain.length; i++) {
             if (!domain[i].isInstance(t[i])) {
-                out.println("ERROR : tuple element is NOT the correct type.");
+                if (domain[i] == Float.class && t[i] instanceof Double) {
+                    // Try casting Double to Float and check again
+                    Float floatValue = ((Double) t[i]).floatValue();
+                    if (domain[i].isInstance(floatValue)) {
+                        // Replace the value in the array with the casted float
+                        t[i] = floatValue;
+                        continue; // Skip the rest of the current iteration and proceed to the next
+                    }
+                }
+                out.println("ERROR: tuple element is NOT the correct type.");
                 return false;
             }
         }
+
 
         return true;
     } // typeCheck
@@ -894,6 +904,15 @@ public class Table
 
         return obj;
     } // extractDom
+
+    /************************************************************************************
+     * Create a new unique index
+     *
+     * @param data  the data to be added
+     * @param attribute   attribute to add to index
+     * @return  new index
+     */
+
 
 } // Table
 
