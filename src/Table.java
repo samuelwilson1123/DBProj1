@@ -506,9 +506,36 @@ public class Table
      */
     public Table i_join (String attributes1, String attributes2, Table table2)
     {
-        //  T O   B E   I M P L E M E N T E D  - Project 2
+        // COMBINE THE COMMONLY NAMED ATTRIBUTES
 
-        return null;
+        System.out.println(String.format("RA> %s.i_join(%s, %s, %s)", name, attributes1, attributes2, table2.name));
+
+        ArrayList<Comparable[]> rows = new ArrayList<>();
+
+        String[] t_attributes = attributes1.split(" ");
+        String[] u_attributes = attributes2.split(" ");
+
+        int[] t_colPos = match(t_attributes);
+        int[] u_colPos = table2.match(u_attributes);
+
+        for (Comparable[] t_tuple : tuples) {
+            Comparable[] t_key = extract(t_tuple, t_attributes);
+            KeyType lookupKey = new KeyType(t_key);
+            ArrayList<Comparable[]> matchingTuples = new ArrayList<>();
+            matchingTuples.add(table2.index.get(lookupKey));
+
+            if (matchingTuples != null) {
+                for (Comparable[] u_tuple : matchingTuples) {
+                    Comparable[] joinedTuple = concat(t_tuple, u_tuple);
+                    rows.add(joinedTuple);
+                }
+            }
+        }
+
+        String[] newAttribute = concat(attribute, table2.attribute);
+        Class[] newDomain = concat(domain, table2.domain);
+
+        return new Table(name + count++, newAttribute, newDomain, key, rows);
 
     } // i_join
 
