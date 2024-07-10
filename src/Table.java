@@ -308,6 +308,20 @@ public class Table
         rows.addAll(tuples);
         rows.addAll(table2.tuples);
         //add the orginal tuples then add the second table's tuples
+        int j = 0;
+        int t = 0;
+        while (t < rows.size()) {
+            j = t;
+            j++;
+            while(j < rows.size()){
+                if(rows.get(t).hashCode() == rows.get(j).hashCode()) {
+                    rows.remove(j);
+                }else {
+                    j++;
+                }
+            }
+            t++;
+        }
 
         return new Table (name + count++, attribute, domain, key, rows);
     } // union
