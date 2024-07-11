@@ -48,7 +48,7 @@ public class LinHashMap <K, V>
     /********************************************************************************
      * The `Bucket` inner class defines buckets that are stored in the hash table.
      */
-    private class Bucket
+    private class Bucket implements Serializable
     {
         int    keys;                                                         // number of active keys
         K []   key;                                                          // array of keys
@@ -153,8 +153,16 @@ public class LinHashMap <K, V>
     {
         var enSet = new HashSet <Map.Entry <K, V>> ();
 
-        //  T O   B E   I M P L E M E N T E D
-            
+        for (var b : hTable) {
+            for (var bb = b; bb != null; bb = b.next) {
+                for (int i = 0; i < bb.keys; i++) {
+                    var key = bb.key[i];
+                    var value = bb.find(key);
+                    enSet.add(new AbstractMap.SimpleEntry<>(key, value));
+                }
+            }
+        }
+
         return enSet;
     } // entrySet
 
@@ -223,7 +231,9 @@ public class LinHashMap <K, V>
         kCount += 1;                                                         // increment the key count
         var lf = loadFactor ();                                              // compute the load factor
         if (DEBUG) out.println (STR."put: load factor = \{lf}");
-        if (lf > THRESHOLD) split ();                                        // split beyond THRESHOLD
+        if (lf > THRESHOLD)  {
+            split ();                                         // split beyond THRESHOLD
+        }
 
         var b = bh;
         while (true) {
