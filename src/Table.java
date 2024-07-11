@@ -66,6 +66,14 @@ public class Table
      */
     private final Map <KeyType, Comparable []> index;
 
+    /** List of all non-primary indexes that have been created
+     */
+    private final List<Map> indexList;
+
+    /** Matching names of every list in the index list
+     */
+    private final List<String> indexNames;
+
     /** The supported map types.
      */
     private enum MapType { NO_MAP, TREE_MAP, HASH_MAP, LINHASH_MAP, BPTREE_MAP }
@@ -140,6 +148,8 @@ public class Table
         key       = _key;
         tuples    = new ArrayList <> ();
         index     = makeMap ();
+        indexList = new ArrayList<>();
+        indexNames = new ArrayList<>();
         out.println (Arrays.toString (domain));
     } // constructor
 
@@ -161,6 +171,8 @@ public class Table
         key       = _key;
         tuples    = _tuples;
         index     = makeMap ();
+        indexList = new ArrayList<>();
+        indexNames = new ArrayList<>();
     } // constructor
 
     /************************************************************************************
@@ -992,6 +1004,9 @@ public class Table
             }
         }
 
+        indexList.add(mindex);
+        indexNames.add(attribute);
+
         return mindex;
     }
 
@@ -1023,6 +1038,9 @@ public class Table
                 out.println(duplicates.get(i));
             }
         }
+
+        indexList.add(uindex);
+        indexNames.add(attributes);
 
         return uindex;
     }
