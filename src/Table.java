@@ -9,6 +9,7 @@
  */
 
 import java.io.*;
+import java.security.Key;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -87,6 +88,21 @@ public class Table
             default          -> null;
         }; // switch
     } // makeMap
+
+    /************************************************************************************
+     * Make a map (index) given the MapType.
+     */
+    private static Map <KeyType, ArrayList<Comparable[]>> makeMultiMap ()
+    {
+        return switch (mType) {
+            case NO_MAP      -> null;
+            case TREE_MAP    -> new TreeMap <> ();
+            case HASH_MAP    -> new HashMap <> ();
+            case LINHASH_MAP -> new LinHashMap <> (KeyType.class, (Class<ArrayList<Comparable[]>>)(Class<?>) ArrayList.class);
+            //case BPTREE_MAP  -> new BpTreeMap <> (KeyType.class, Comparable [].class);
+            default          -> null;
+        }; // switch
+    } // makeMultiMap
 
     /************************************************************************************
      * Concatenate two arrays of type T to form a new wider array.
@@ -518,8 +534,6 @@ public class Table
      */
     public Table i_join (String attributes1, String attributes2, Table table2)
     {
-        // COMBINE THE COMMONLY NAMED ATTRIBUTES
-
         System.out.println(String.format("RA> %s.i_join(%s, %s, %s)", name, attributes1, attributes2, table2.name));
 
         ArrayList<Comparable[]> rows = new ArrayList<>();
@@ -957,9 +971,9 @@ public class Table
      * @param attribute   attribute to add to index
      * @return  new index
      */
-    public LinHashMap<KeyType, ArrayList<Comparable[]>> create_mindex(String attribute) {
+    public Map<KeyType, ArrayList<Comparable[]>> create_mindex(String attribute) {
 
-        LinHashMap<KeyType, ArrayList<Comparable[]>> mindex = new LinHashMap<>(KeyType.class, (Class<ArrayList<Comparable[]>>)(Class<?>) ArrayList.class);
+        Map<KeyType, ArrayList<Comparable[]>> mindex = makeMultiMap();
 
         var attrs = attribute.split (" ");
         var colPos = match(attrs);
@@ -987,8 +1001,8 @@ public class Table
      * @param attributes   attribute to add to index
      * @return  new index
      */
-    public LinHashMap<KeyType, Comparable[]> create_index(String attributes) {
-        LinHashMap<KeyType, Comparable[]> uindex = new LinHashMap<>(KeyType.class, Comparable[].class);
+    public Map<KeyType, Comparable[]> create_index(String attributes) {
+        Map<KeyType, Comparable[]> uindex = makeMap();
         ArrayList<Comparable[]> duplicates = new ArrayList<>();
 
         var attrs = attributes.split(" ");
