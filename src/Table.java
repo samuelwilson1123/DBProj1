@@ -538,14 +538,48 @@ public class Table
 
             if (matchingTuples != null) {
                 for (Comparable[] u_tuple : matchingTuples) {
-                    Comparable[] joinedTuple = concat(t_tuple, u_tuple);
+                    ArrayList<Comparable> new_tup = new ArrayList<>(Arrays.asList(u_tuple));
+                    for (int u_col : u_colPos) {
+                        new_tup.remove(u_tuple[u_col]);
+                    }
+
+                    // Convert ArrayList to array and concatenate with t_tuple
+                    Comparable[] altered = new Comparable[new_tup.size()];
+                    new_tup.toArray(altered);
+                    Comparable[] joinedTuple = concat(t_tuple, altered);
                     rows.add(joinedTuple);
                 }
             }
         }
 
-        String[] newAttribute = concat(attribute, table2.attribute);
+        // Create new attributes array without the compared attributes from table2
+        ArrayList<String> tempAttr = new ArrayList<>();
+        for (String attr : table2.attribute) {
+            boolean match = false;
+            for (String u_attr : u_attributes) {
+                if (attr.equals(u_attr)) {
+                    match = true;
+                    break;
+                }
+            }
+            if (!match) {
+                tempAttr.add(attr);
+            }
+        }
+        String[] attrArr = new String[tempAttr.size()];
+        tempAttr.toArray(attrArr);
+
+        String[] newAttribute = concat(attribute, attrArr);
         Class[] newDomain = concat(domain, table2.domain);
+
+        // Disambiguate attribute names
+        for (int i = 0; i < attribute.length; i++) {
+            for (int j = 0; j < attrArr.length; j++) {
+                if (attribute[i].equals(attrArr[j])) {
+                    newAttribute[attribute.length + j] += "2";
+                }
+            }
+        }
 
         return new Table(name + count++, newAttribute, newDomain, key, rows);
 
