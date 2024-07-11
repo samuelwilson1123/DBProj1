@@ -71,7 +71,7 @@ public class Table
 
     /** The map type to be used for indices.  Change as needed.
      */
-    private static final MapType mType = MapType.TREE_MAP;
+    private static final MapType mType = MapType.LINHASH_MAP;
 
     /************************************************************************************
      * Make a map (index) given the MapType.
@@ -183,8 +183,6 @@ public class Table
         var newKey    = (Arrays.asList (attrs).containsAll (Arrays.asList (key))) ? key : attrs;
 
         List <Comparable []> rows = new ArrayList <> ();
-
-        //  T O   B E   I M P L E M E N T E D 
 
         return new Table (name + count++, attrs, colDomain, newKey, rows);
     } // project
@@ -920,13 +918,66 @@ public class Table
     } // extractDom
 
     /************************************************************************************
-     * Create a new unique index
+     * Create a new non-unique index
      *
-     * @param data  the data to be added
      * @param attribute   attribute to add to index
      * @return  new index
      */
+    public LinHashMap<KeyType, ArrayList<Comparable[]>> create_mindex(String attribute) {
 
+        LinHashMap<KeyType, ArrayList<Comparable[]>> mindex = new LinHashMap<>(KeyType.class, (Class<ArrayList<Comparable[]>>)(Class<?>) ArrayList.class);
+
+        var attrs = attribute.split (" ");
+        var colPos = match(attrs);
+
+        for (var tuple : tuples) {
+            KeyType key = new KeyType(tuple[colPos[0]]);
+            if (mindex.containsKey(key)) {
+                ArrayList<Comparable[]> list = mindex.get(key);
+                mindex.remove(key);
+                list.add(tuple);
+                mindex.put(key, list);
+            } else {
+                ArrayList<Comparable[]> list = new ArrayList<>();
+                list.add(tuple);
+                mindex.put(key, list);
+            }
+        }
+
+        return mindex;
+    }
+
+    /************************************************************************************
+     * Create a new unique index
+     *
+     * @param attributes   attribute to add to index
+     * @return  new index
+     */
+    public LinHashMap<KeyType, Comparable[]> create_index(String attributes) {
+        LinHashMap<KeyType, Comparable[]> uindex = new LinHashMap<>(KeyType.class, Comparable[].class);
+        ArrayList<Comparable[]> duplicates = new ArrayList<>();
+
+        var attrs = attributes.split(" ");
+        var colPos = match(attrs);
+
+        for (var tuple : tuples) {
+            KeyType key = new KeyType(tuple[colPos[0]]);
+            if (uindex.containsKey(key)) {
+                duplicates.add(tuple);
+            } else {
+                uindex.put(key, tuple);
+            }
+        }
+
+        if (!duplicates.isEmpty()) {
+            out.println("Duplicate keys found: ");
+            for (int i = 0; i < duplicates.size(); i++) {
+                out.println(duplicates.get(i));
+            }
+        }
+
+        return uindex;
+    }
 
 } // Table
 
