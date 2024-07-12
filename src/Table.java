@@ -326,13 +326,24 @@ public class Table
     public Table union (Table table2)
     {
         out.println (STR."RA> \{name}.union (\{table2.name})");
-        if (! compatible (table2)) return null;
+        if (! compatible (table2)) return null; //checks to see if tables can union
 
         List <Comparable []> rows = new ArrayList <> ();
+        List <Comparable []> rows2 = new ArrayList <> ();
+        rows2.addAll(table2.tuples);
 
-        //  T O   B E   I M P L E M E N T E D
+        for (Comparable [] ttuple :tuples){
+            for(Comparable[] wtuple : table2.tuples) {
+                if (this.index.containsKey(table2.index.get(wtuple))){
+                    rows2.remove(wtuple);
+                }
+            }
+
+        }
+
         rows.addAll(tuples);
-        rows.addAll(table2.tuples);
+        rows.addAll(rows2);
+
         //add the orginal tuples then add the second table's tuples
         int j = 0;
         int t = 0;
