@@ -1045,5 +1045,20 @@ public class Table
         return uindex;
     }
 
+    /************************************************************************************
+     * Drops the primary index
+     */
+    public void drop_index() {
+        index.clear();
+    }
+
+    /************************************************************************************
+     * Drops a non-primary index
+     */
+    public void drop_mindex(String attribute) {
+        var i = indexList.get(indexNames.indexOf(attribute));
+        i.clear();
+    }
+
 } // Table
 

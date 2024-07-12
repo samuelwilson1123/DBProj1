@@ -92,7 +92,7 @@ public class LinHashMap <K, V>
 
     /** The list of buckets making up the hash table.
      */
-    private final List <Bucket> hTable;
+    private List <Bucket> hTable;
 
     /** The modulus for low resolution hashing
      */
@@ -140,6 +140,12 @@ public class LinHashMap <K, V>
      * @return  the load factor
      */
     private double loadFactor () { return kCount / (double) size (); }
+
+    public void clear() {
+        super.clear();
+        hTable = new ArrayList<>();
+        for (var i = 0; i < mod1; i++) hTable.add (new Bucket ());
+    }
 
 //-----------------------------------------------------------------------------------
 // Retrieve values or entry set
@@ -336,7 +342,7 @@ public class LinHashMap <K, V>
  
     /********************************************************************************
      * The main method used for testing.  Also test for more keys and with RANDOMLY true.
-     * @param  the command-line arguments (args [0] gives number of keys to insert)
+     * @param args the command-line arguments (args [0] gives number of keys to insert)
      */
     public static void main (String [] args)
     {
