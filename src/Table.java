@@ -203,17 +203,32 @@ public class Table
      * @param attributes  the attributes to project onto
      * @return  a table of projected tuples
      */
-    public Table project (String attributes)
-    {
-        out.println ("RA> " + name + ".project (" + attributes + ")");
-        var attrs     = attributes.split (" ");
-        var colDomain = extractDom (match (attrs), domain);
-        var newKey    = (Arrays.asList (attrs).containsAll (Arrays.asList (key))) ? key : attrs;
+    public Table project(String attributes) {
 
-        List <Comparable []> rows = new ArrayList <> ();
-
-        return new Table (name + count++, attrs, colDomain, newKey, rows);
-    } // project
+        out.println("RA> " + name + ".project (" + attributes + ")");
+    
+        var attrs = attributes.split(" ");
+        var colDomain = extractDom(match(attrs), domain);
+        var newKey = (Arrays.asList(attrs).containsAll(Arrays.asList(key))) ? key : attrs;
+    
+        // Create an index for the given attributes 
+        Map<KeyType, ArrayList<Comparable[]>> pIndex = create_mindex(attributes);
+    
+        List<Comparable[]> rows = new ArrayList<>();
+    
+        // Iterate through the index in order to build the projection
+        for (Map.Entry<KeyType, ArrayList<Comparable[]>> entry : pIndex.entrySet()) {
+            for (Comparable[] tuple : entry.getValue()) {
+                Comparable[] projectedTuple = new Comparable[attrs.length];
+                for (int i = 0; i < attrs.length; i++) {
+                    projectedTuple[i] = tuple[match(new String[]{attrs[i]})[0]];
+                }
+                rows.add(projectedTuple);
+            }
+        }
+    
+        return new Table(name + count++, attrs, colDomain, newKey, rows);
+     } // project
 
     /************************************************************************************
      * Select the tuples satisfying the given predicate (Boolean function).
@@ -372,36 +387,32 @@ public class Table
      * @param table2  The rhs table in the minus operation
      * @return  a table representing the difference
      */
-    public Table minus (Table table2)
-    {
+    public Table minus(Table table2) {
+
         out.println (STR."RA> \{name}.minus (\{table2.name})");
 
-        // Check if the two tables are compatible 
-        if (! compatible (table2)) return null;
+        // Check if the two tables are compatible
+        if (!compatible(table2)) return null;
 
-        // Create a new list 
-        List <Comparable []> rows = new ArrayList <> ();
+        // Create a new list to store the result tuples
+        List<Comparable[]> resultTuples = new ArrayList<>();
 
-        // Iterate through each tuple in the current table
-        for (var t1 : tuples) {
-            boolean found = false;
+        // Create index for both table2
+        Map<KeyType, Comparable[]> table2Index = table2.create_index(table2.attribute[0]);
 
-            // Iterate through each tuple in the second table
-            for (var t2 : table2.tuples) {
+        // Iterate through each tuple in table1
+        for (Comparable[] t1 : tuples) {
 
-                // Check if the tuples from the tables are equal
-                if (Arrays.equals(t1,t2)) {
-                    found = true;
-                    break;
-                }
+            // Create a key for the current tuple
+            KeyType key = new KeyType(t1[match(new String[]{this.attribute[0]})[0]]);
+
+            // Check if the tuple exists in the second table using the index
+            if (!table2Index.containsKey(key)) {
+                resultTuples.add(t1);
             }
-
-            // Add tuple to result table if it was not found in the second table
-            if(!found) rows.add(t1);
         }
-
-        return new Table (name + count++, attribute, domain, key, rows);
-
+  
+        return new Table (name + count++, attribute, domain, key, resultTuples);
     } // minus
 
     /************************************************************************************
